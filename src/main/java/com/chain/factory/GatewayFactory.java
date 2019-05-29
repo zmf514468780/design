@@ -22,7 +22,8 @@ public class GatewayFactory {
     @Autowired
     private SpringUtils springUtils;
     private GatewayHandlerService firstGatewayHandlerService;
-    public static GatewayHandlerService getGatewayHandlerByEnmus(){
+
+    public static GatewayHandlerService getGatewayHandlerByEnmus() {
         GatewayHandlerService currentLimitHandler = new CurrentLimitHandler();
         GatewayHandlerService blacklistHandler = new BlacklistHandler();
         GatewayHandlerService conversationHandler = new ConversationHandler();
@@ -31,18 +32,18 @@ public class GatewayFactory {
         return currentLimitHandler;
     }
 
-    public   GatewayHandlerService getGatewayHandlerBySql(){
+    public GatewayHandlerService getGatewayHandlerBySql() {
         // 获取到第一个节点
         GatewayHandler firstHandler = chainMapper.getFirstHandler();
-        if(firstHandler == null){
+        if (firstHandler == null) {
             return null;
         }
         // 获取第一个类
-        GatewayHandlerService firstGatewayHandler  =
+        GatewayHandlerService firstGatewayHandler =
                 springUtils.getBean(firstHandler.getHandler_id(), GatewayHandlerService.class);
         String nextBeanHandlerId = firstHandler.getNext_handler_id();
         GatewayHandlerService tempNextGatewayHandler = firstGatewayHandler;
-        while(nextBeanHandlerId != null){
+        while (nextBeanHandlerId != null) {
             // 4.从SpringBoot容器获取下一个handler对象
             GatewayHandlerService nextGatewayHandler = springUtils.getBean(nextBeanHandlerId, GatewayHandlerService.class);
             if (nextGatewayHandler == null) {
@@ -58,30 +59,47 @@ public class GatewayFactory {
             tempNextGatewayHandler.setNextGatewayHandler(nextGatewayHandler);
             tempNextGatewayHandler = nextGatewayHandler;
 
-        } 
+        }
         this.firstGatewayHandlerService = firstGatewayHandler;
         return firstGatewayHandlerService;
     }
-    public   GatewayHandlerService getGatewayHandlerBySql2(){
+
+    public GatewayHandlerService getGatewayHandlerBySql2() {
         // 第一个
         GatewayHandler firstHandler = chainMapper.getFirstHandler();
-        if(firstHandler == null){
+        if (firstHandler == null) {
             return null;
         }
-        GatewayHandlerService gatewayHandlerService = springUtils.getBean(firstHandler.getHandler_id(), GatewayHandlerService.class);
-        GatewayHandlerService temp = gatewayHandlerService;
-        String nextHandlerId =  firstHandler.getNext_handler_id();
-        while(nextHandlerId != null){
+        GatewayHandlerService firstGatewayHandler = springUtils.getBean(firstHandler.getHandler_id(), GatewayHandlerService.class);
+        GatewayHandlerService temp = firstGatewayHandler;
+        String nextHandlerId = firstHandler.getNext_handler_id();
+        while (nextHandlerId != null) {
             // 调用service 方法
+            // 注释方法为错误
+            //  firstGatewayHandler  = springUtils.getBean(nextHandlerId, GatewayHandlerService.class);
+            GatewayHandlerService nextGatewayHandler = springUtils.getBean(nextHandlerId, GatewayHandlerService.class);
             // 获取到下一关
             GatewayHandler handler = chainMapper.getHandler(nextHandlerId);
-            gatewayHandlerService = springUtils.getBean(handler.getHandler_id(), GatewayHandlerService.class);
             nextHandlerId = handler.getNext_handler_id();
-            temp.setNextGatewayHandler(gatewayHandlerService);
-            temp = gatewayHandlerService;
+            temp.setNextGatewayHandler(nextGatewayHandler);
+            temp = nextGatewayHandler;
         }
-        this.firstGatewayHandlerService = temp;
+        // this.firstGatewayHandlerService = temp;
+        this.firstGatewayHandlerService = firstGatewayHandler;
         return firstGatewayHandlerService;
+    }
+
+    public static void main(String[] args) {
+        // 这里演示为什么可以赋值成功    
+        GatewayHandlerService currentLimitHandler = new CurrentLimitHandler();
+        GatewayHandlerService temp = currentLimitHandler;
+        GatewayHandlerService blacklistHandler = new BlacklistHandler();
+        temp.setNextGatewayHandler(blacklistHandler);
+        temp = blacklistHandler;
+        GatewayHandlerService conversationHandler = new ConversationHandler();
+        temp.setNextGatewayHandler(conversationHandler);
+        System.out.println(currentLimitHandler);
+        currentLimitHandler.service();
     }
 }
 

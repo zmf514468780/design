@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * @Description TODO
+ * @Description
  * @Author zhumf
  * @Date 2019/5/23
  **/
@@ -21,16 +21,48 @@ public class GatewayFactory {
     private ChainMapper chainMapper;
     @Autowired
     private SpringUtils springUtils;
-    public static GatewayHandlerService getGatewayHandler(){
-        CurrentLimitHandler currentLimitHandler = new CurrentLimitHandler();
-        BlacklistHandler blacklistHandler = new BlacklistHandler();
-        ConversationHandler conversationHandler = new ConversationHandler();
+    private GatewayHandlerService firstGatewayHandlerService;
+    public static GatewayHandlerService getGatewayHandlerByEnmus(){
+        GatewayHandlerService currentLimitHandler = new CurrentLimitHandler();
+        GatewayHandlerService blacklistHandler = new BlacklistHandler();
+        GatewayHandlerService conversationHandler = new ConversationHandler();
         currentLimitHandler.setNextGatewayHandler(blacklistHandler);
         blacklistHandler.setNextGatewayHandler(conversationHandler);
         return currentLimitHandler;
     }
 
     public   GatewayHandlerService getGatewayHandlerBySql(){
+        // 获取到第一个节点
+        GatewayHandler firstHandler = chainMapper.getFirstHandler();
+        if(firstHandler == null){
+            return null;
+        }
+        // 获取第一个类
+        GatewayHandlerService firstGatewayHandler  =
+                springUtils.getBean(firstHandler.getHandler_id(), GatewayHandlerService.class);
+        String nextBeanHandlerId = firstHandler.getNext_handler_id();
+        GatewayHandlerService tempNextGatewayHandler = firstGatewayHandler;
+        while(nextBeanHandlerId != null){
+            // 4.从SpringBoot容器获取下一个handler对象
+            GatewayHandlerService nextGatewayHandler = springUtils.getBean(nextBeanHandlerId, GatewayHandlerService.class);
+            if (nextGatewayHandler == null) {
+                break;
+            }
+            // 5.从数据库查询该hanlder信息
+            GatewayHandler nextGatewayHandlerEntity = chainMapper.getHandler(nextBeanHandlerId);
+            if (nextGatewayHandlerEntity == null) {
+                break;
+            }
+            // 6.设置下一个white循环遍历hanlderid
+            nextBeanHandlerId = nextGatewayHandlerEntity.getNext_handler_id();
+            tempNextGatewayHandler.setNextGatewayHandler(nextGatewayHandler);
+            tempNextGatewayHandler = nextGatewayHandler;
+
+        } 
+        this.firstGatewayHandlerService = firstGatewayHandler;
+        return firstGatewayHandlerService;
+    }
+    public   GatewayHandlerService getGatewayHandlerBySql2(){
         // 第一个
         GatewayHandler firstHandler = chainMapper.getFirstHandler();
         if(firstHandler == null){
@@ -45,10 +77,11 @@ public class GatewayFactory {
             GatewayHandler handler = chainMapper.getHandler(nextHandlerId);
             gatewayHandlerService = springUtils.getBean(handler.getHandler_id(), GatewayHandlerService.class);
             nextHandlerId = handler.getNext_handler_id();
-//            nextBeanHandlerId = nextGatewayHandlerEntity.getNextHandlerId();
             temp.setNextGatewayHandler(gatewayHandlerService);
+            temp = gatewayHandlerService;
         }
-        gatewayHandlerService = temp;
-        return gatewayHandlerService;
+        this.firstGatewayHandlerService = temp;
+        return firstGatewayHandlerService;
     }
 }
+

@@ -1,4 +1,4 @@
-package com.contextstrategy;
+package com.contextstrategy.enums;
 
 public enum StrategyEnums {
     ali_pay("com.contextstrategy.service.impl.AliPayStrategy");

@@ -40,6 +40,8 @@ public class ChainController {
     public void chainService(){
         GatewayHandlerService service=factory.getGatewayHandlerBySql();
         service.service();
+        System.out.println("=================================");
+        factory.getGatewayHandlerBySql2().service();
     }
 
 }

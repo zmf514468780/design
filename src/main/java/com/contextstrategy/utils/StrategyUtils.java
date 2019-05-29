@@ -1,6 +1,6 @@
 package com.contextstrategy.utils;
 
-import com.contextstrategy.StrategyEnums;
+import com.contextstrategy.enums.StrategyEnums;
 import com.contextstrategy.service.PayStrategy;
 
 /**

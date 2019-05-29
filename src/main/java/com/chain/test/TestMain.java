@@ -8,7 +8,7 @@ import com.chain.factory.GatewayFactory;
  **/
 public class TestMain {
     public static void main(String[] args) {
-        GatewayFactory.getGatewayHandler().service();
+        GatewayFactory.getGatewayHandlerByEnmus().service();
     }   
 }
         

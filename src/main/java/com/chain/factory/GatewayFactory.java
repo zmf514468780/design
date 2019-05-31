@@ -6,7 +6,7 @@ import com.chain.service.GatewayHandlerService;
 import com.chain.service.impl.BlacklistHandler;
 import com.chain.service.impl.ConversationHandler;
 import com.chain.service.impl.CurrentLimitHandler;
-import com.contextstrategy.utils.SpringUtils;
+import com.utils.SpringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
